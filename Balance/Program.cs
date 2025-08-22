@@ -12,9 +12,10 @@ namespace Balance
         {
             var builder = WebApplication.CreateBuilder(args);
 
-
+            #region Add DbContext
             builder.Services.AddDbContext<EliteErp2342024Context>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("BalanceCon")));
+            #endregion
 
             #region Add Cors
 
