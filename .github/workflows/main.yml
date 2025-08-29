@@ -26,6 +26,10 @@ jobs:
       - name: Publish
         run: dotnet publish Balance.sln --configuration Release --no-build -o ./publish
 
+      - name: Debug secrets
+        run: |
+          echo "DOCKER_USERNAME is: ${{ secrets.DOCKER_USERNAME }}"
+
       - name: Build Docker image
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/balance:latest .
 
