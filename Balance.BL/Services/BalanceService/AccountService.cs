@@ -1,5 +1,6 @@
 ﻿using Balance.BL.DTOs.BalanceDtos;
 using Balance.BL.DTOs.TransactiosDtos;
+using Balance.BL.PaginationDtos;
 using Balance.DAL.IRepository;
 
 
@@ -19,14 +20,14 @@ namespace Balance.BL.Services.BalanceService
             var accounts = await _repo.GetAllAsync();
 
             return accounts.Select(a => new AccountReadDTO
-            {
+            { 
                 Id = a.BalanceId,
                 Name = a.BalanceName,
                 DisplayName = $"{a.BalanceId} - {a.BalanceName}"
             });
         }
         public async Task<AccountStatementDto?> GetStatementAsync(
-        int accountId, DateTime from, DateTime to, int pageNumber, int pageSize)
+       int accountId, DateTime from, DateTime to, int pageNumber, int pageSize)
         {
             var account = await _repo.GetAccountByIdAsync(accountId);
             if (account == null) return null;
@@ -53,9 +54,7 @@ namespace Balance.BL.Services.BalanceService
                 };
             });
 
-            // هنا بنعمل Pagination على مستوى الـ Rows
             var pagedRows = ApplyPagination(rows.AsQueryable(), pageNumber, pageSize);
-
 
             var totalDebit = rows.Sum(r => r.Debit ?? 0);
             var totalCredit = rows.Sum(r => r.Credit ?? 0);
@@ -66,13 +65,16 @@ namespace Balance.BL.Services.BalanceService
             {
                 AccountId = account.BalanceId,
                 AccountName = account.BalanceName,
-                Rows = pagedRows, // ✅ الباجينيشن هنا
+                Data = pagedRows.Data, 
                 TotalDebit = totalDebit,
                 TotalCredit = totalCredit,
                 FinalBalance = finalBalance,
-                FirstPreviousBalance = firstPreviousBalance
+                FirstPreviousBalance = firstPreviousBalance,
+                TotalCount = pagedRows.TotalCount 
             };
         }
+
+        
 
         public async Task<IEnumerable<AccountAutoCompleteDto>> GetAccountsForAutoCompleteAsync(string? search = null)
         {
@@ -98,15 +100,11 @@ namespace Balance.BL.Services.BalanceService
         }
         public async Task<AccountStatementDto?> GetYearToDateStatementAsync(int accountId)
         {
-            // تحديد بداية ونهاية السنة الحالية
             var currentYear = DateTime.Now.Year;
-            var fromDate = new DateTime(currentYear, 1, 1); // 1 يناير
-            var toDate = DateTime.Now; // اليوم الحالي
+            var fromDate = new DateTime(currentYear, 1, 1);
+            var toDate = DateTime.Now; 
 
-            // استخدام نفس method الموجودة
-          //
          return null ;
-          //return await GetStatementAsync(accountId, fromDate, toDate);
         }
         public async Task<TransactionDetailsDto?> GetTransactionDetailsAsync(long transactionId)
         {
@@ -115,7 +113,6 @@ namespace Balance.BL.Services.BalanceService
 
             decimal? finalBalance = null;
 
-            // لو محتاج نوع الحساب لازم تعمل Include لـ Balance في الـ Repo
             if (tx.Balance != null && tx.Balance.BalanceType?.ToLower() == "debit")
             {
                 finalBalance = ((tx.PrevBalnce ?? 0) + (tx.Debtor ?? 0)) - (tx.Creditor ?? 0);
@@ -140,16 +137,25 @@ namespace Balance.BL.Services.BalanceService
             };
         }
 
-        private List<T> ApplyPagination<T>(IEnumerable<T> source, int pageNumber, int pageSize)
+        private PageResult<T> ApplyPagination<T>(IQueryable<T> source, int pageNumber, int pageSize)
         {
             if (pageNumber <= 0) pageNumber = 1;
             if (pageSize <= 0) pageSize = 10;
 
-            return source
+            var totalCount = source.Count();
+
+            var items = source
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();
+
+            return new PageResult<T>
+            {
+                Data = items,
+                TotalCount = totalCount
+            };
         }
+
 
     }
 }
