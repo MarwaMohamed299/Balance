@@ -53,7 +53,8 @@ namespace Balance.BL.Services.BalanceService
                 };
             });
 
-            var pagedRows = ApplyPagination(rows, pageNumber, pageSize);
+            // هنا بنعمل Pagination على مستوى الـ Rows
+            var pagedRows = ApplyPagination(rows.AsQueryable(), pageNumber, pageSize);
 
 
             var totalDebit = rows.Sum(r => r.Debit ?? 0);
