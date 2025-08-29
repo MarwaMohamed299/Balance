@@ -31,7 +31,8 @@ jobs:
           echo "DOCKER_USERNAME is: ${{ secrets.DOCKER_USERNAME }}"
 
       - name: Build Docker image
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/balance:latest .
+        run: docker build -f Balance/Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/balance:latest .
+
 
       - name: Login to DockerHub
         uses: docker/login-action@v2
