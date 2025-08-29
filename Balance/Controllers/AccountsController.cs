@@ -40,7 +40,7 @@ namespace Balance.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "خطأ في جلب الحسابات", error = ex.Message });
+                return StatusCode(500, new { message = "Error Ocurred ", error = ex.Message });
             }
         }
         [HttpPost("year-to-date/{accountId}")]
@@ -51,13 +51,13 @@ namespace Balance.Controllers
                 var result = await _accountService.GetYearToDateStatementAsync(accountId);
 
                 if (result == null)
-                    return NotFound(new { message = "الحساب غير موجود" });
+                    return NotFound(new { message = "No Account Present" });
 
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "خطأ في جلب بيانات السنة", error = ex.Message });
+                return StatusCode(500, new { message = "Error Ocurred", error = ex.Message });
             }
         }
 
